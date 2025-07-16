@@ -10,10 +10,9 @@ import (
 )
 
 func main() {
-	repo := repository.NewFactsRepository()
-    svc := service.NewFactsService(repo)
-    h := api.NewFactsHandler(svc)
-	api := api.New(h)
+	repository := repository.NewFactsRepository()
+    service := service.NewFactsService(repository)
+	api := api.New(service)
 
 	err := api.Start(context.TODO())
 	if err != nil {

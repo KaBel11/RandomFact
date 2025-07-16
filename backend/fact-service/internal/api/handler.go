@@ -91,7 +91,7 @@ func (h *FactsHandler) Update(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-	utils.RespondJSON(w, http.StatusCreated, fact)
+	utils.RespondJSON(w, http.StatusOK, fact)
 }
 
 func (h *FactsHandler) Delete(w http.ResponseWriter, r *http.Request) {

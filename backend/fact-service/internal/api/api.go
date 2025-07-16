@@ -4,15 +4,18 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+
+	"github.com/KaBel11/RandomFact/fact-service/internal/service"
 )
 
 type Api struct {
 	router http.Handler
 }
 
-func New(factsHandler *FactsHandler) *Api {
+func New(service *service.FactsService) *Api {
+	handler := NewFactsHandler(service)
 	api := &Api{
-		router: loadRoutes(factsHandler),
+		router: loadRoutes(handler),
 	}
 	return api
 }
