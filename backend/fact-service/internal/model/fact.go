@@ -1,6 +1,6 @@
 package model
 
 type Fact struct {
-	ID   int    `json:"id"`
+	ID   uint64 `json:"id"`
 	Text string `json:"text"`
 }

@@ -3,19 +3,18 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
 
-	"github.com/KaBel11/RandomFact/fact-service/internal/api"
-	"github.com/KaBel11/RandomFact/fact-service/internal/repository"
-	"github.com/KaBel11/RandomFact/fact-service/internal/service"
+	"github.com/KaBel11/RandomFact/fact-service/internal/application"
 )
 
 func main() {
-	repository := repository.NewFactsRepository()
-    service := service.NewFactsService(repository)
-	api := api.New(service)
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
 
-	err := api.Start(context.TODO())
+	err := application.Start(ctx)
 	if err != nil {
-		fmt.Println("failed to start api:", err)
+		fmt.Println("failed to start application:", err)
 	}
 }

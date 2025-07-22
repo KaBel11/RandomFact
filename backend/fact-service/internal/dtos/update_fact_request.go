@@ -1,6 +1,6 @@
 package dtos
 
 type UpdateFactRequest struct {
-	ID   int    `json:"id"`
+	ID   uint64    `json:"id"`
 	Text string `json:"text"`
 }

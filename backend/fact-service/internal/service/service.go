@@ -7,18 +7,18 @@ import (
 )
 
 type FactsService struct {
-	repo *repository.FactsRepository
+	repo repository.FactsRepository
 }
 
-func NewFactsService(repo *repository.FactsRepository) *FactsService {
+func NewFactsService(repo repository.FactsRepository) *FactsService {
 	return &FactsService{repo: repo}
 }
 
-func (s *FactsService) GetAllFacts() (*[]model.Fact, error) {
+func (s *FactsService) GetAllFacts() ([]model.Fact, error) {
 	return s.repo.GetAll()
 }
 
-func (s *FactsService) GetByID(id int) (*model.Fact, error) {
+func (s *FactsService) GetByID(id uint64) (*model.Fact, error) {
 	return s.repo.GetByID(id)
 }
 
@@ -34,6 +34,6 @@ func (s *FactsService) UpdateFact(parameters dtos.UpdateFactRequest) (*model.Fac
 	return s.repo.Update(parameters)
 }
 
-func (s *FactsService) DeleteFact(id int) error {
+func (s *FactsService) DeleteFact(id uint64) error {
 	return s.repo.Delete(id)
 }

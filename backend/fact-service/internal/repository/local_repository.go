@@ -8,19 +8,19 @@ import (
 	"github.com/KaBel11/RandomFact/fact-service/internal/model"
 )
 
-type FactsRepository struct {
+type LocalFactsRepository struct {
 	facts []model.Fact
 }
 
-func NewFactsRepository() *FactsRepository {
-	return &FactsRepository{}
+func NewLocalFactsRepository() *LocalFactsRepository {
+	return &LocalFactsRepository{}
 }
 
-func (r *FactsRepository) GetAll() (*[]model.Fact, error) {
-	return &r.facts, nil
+func (r *LocalFactsRepository) GetAll() ([]model.Fact, error) {
+	return r.facts, nil
 }
 
-func (r *FactsRepository) GetRandom() (*model.Fact, error) {
+func (r *LocalFactsRepository) GetRandom() (*model.Fact, error) {
 	if len(r.facts) == 0 {
 		return nil, errors.New("no facts available")
 	}
@@ -28,7 +28,7 @@ func (r *FactsRepository) GetRandom() (*model.Fact, error) {
 	return &r.facts[randomIndex], nil
 }
 
-func (r *FactsRepository) GetByID(id int) (*model.Fact, error) {
+func (r *LocalFactsRepository) GetByID(id uint64) (*model.Fact, error) {
 	for i := range r.facts {
 		if r.facts[i].ID == id {
 			return &r.facts[i], nil
@@ -37,11 +37,11 @@ func (r *FactsRepository) GetByID(id int) (*model.Fact, error) {
 	return nil, errors.New("fact not found")
 }
 
-func (r *FactsRepository) Create(parameters dtos.CreateFactRequest) (*model.Fact, error) {
+func (r *LocalFactsRepository) Create(parameters dtos.CreateFactRequest) (*model.Fact, error) {
 	newFactID := len(r.facts) + 1
 
 	newFact := model.Fact{
-		ID:   newFactID,
+		ID:   uint64(newFactID),
 		Text: parameters.Text,
 	}
 
@@ -50,7 +50,7 @@ func (r *FactsRepository) Create(parameters dtos.CreateFactRequest) (*model.Fact
 	return &newFact, nil
 }
 
-func (r *FactsRepository) Update(parameters dtos.UpdateFactRequest) (*model.Fact, error) {
+func (r *LocalFactsRepository) Update(parameters dtos.UpdateFactRequest) (*model.Fact, error) {
 	for i := range r.facts {
 		if r.facts[i].ID == parameters.ID {
 			r.facts[i].Text = parameters.Text
@@ -61,7 +61,7 @@ func (r *FactsRepository) Update(parameters dtos.UpdateFactRequest) (*model.Fact
 	return nil, errors.New("fact not found")
 }
 
-func (r *FactsRepository) Delete(id int) error {
+func (r *LocalFactsRepository) Delete(id uint64) error {
 	for i := range r.facts {
 		if r.facts[i].ID == id {
 			r.facts = append(r.facts[:i], r.facts[i+1:]...)
