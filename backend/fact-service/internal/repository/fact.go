@@ -9,22 +9,25 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-type PostgresFactsRepository struct {
+type FactRepository struct {
 	db *pgx.Conn
 }
 
-func NewPostgresFactsRepository(conn *pgx.Conn) *PostgresFactsRepository {
-	return &PostgresFactsRepository{db: conn}
+func NewFactRepository(conn *pgx.Conn) *FactRepository {
+	return &FactRepository{db: conn}
 }
 
-func (r *PostgresFactsRepository) GetAll() ([]model.Fact, error) {
-	rows, err := r.db.Query(context.Background(), `SELECT id, text FROM facts`)
+func (r *FactRepository) GetAll(ctx context.Context) ([]model.Fact, error) {
+	query := `SELECT id, text FROM facts`
+
+	rows,err := r.db.Query(ctx, query)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	var facts []model.Fact
+
 	for rows.Next() {
 		var fact model.Fact
 		if err := rows.Scan(&fact.ID, &fact.Text); err != nil {
@@ -36,24 +39,25 @@ func (r *PostgresFactsRepository) GetAll() ([]model.Fact, error) {
 	return facts, nil
 }
 
-func (r *PostgresFactsRepository) GetRandom() (*model.Fact, error) {
-	row := r.db.QueryRow(context.Background(), `
+func (r *FactRepository) GetRandom(ctx context.Context) (*model.Fact, error) {
+	query := `
         SELECT id, text FROM facts
         OFFSET floor(random() * (SELECT COUNT(*) FROM facts))::int LIMIT 1
-    `)
-
+    `
 	var fact model.Fact
-	if err := row.Scan(&fact.ID, &fact.Text); err != nil {
+	err := r.db.QueryRow(ctx, query).Scan(&fact.ID, &fact.Text)
+	if err != nil {
 		return nil, err
 	}
 	return &fact, nil
 }
 
-func (r *PostgresFactsRepository) GetByID(id uint64) (*model.Fact, error) {
-	row := r.db.QueryRow(context.Background(), `SELECT id, text FROM facts WHERE id=$1`, id)
+func (r *FactRepository) GetByID(ctx context.Context, id uint64) (*model.Fact, error) {
+	query := `SELECT id, text FROM facts WHERE id=$1`
 
 	var fact model.Fact
-	if err := row.Scan(&fact.ID, &fact.Text); err != nil {
+	err := r.db.QueryRow(ctx, query, id).Scan(&fact.ID, &fact.Text)
+	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, errors.New("fact not found")
 		}
@@ -62,11 +66,13 @@ func (r *PostgresFactsRepository) GetByID(id uint64) (*model.Fact, error) {
 	return &fact, nil
 }
 
-func (r *PostgresFactsRepository) Create(req dtos.CreateFactRequest) (*model.Fact, error) {
+func (r *FactRepository) Create(ctx context.Context, req dtos.CreateFactRequest) (*model.Fact, error) {
+	query := `INSERT INTO facts (text) VALUES ($1) RETURNING id, text`
+	
 	var fact model.Fact
 	err := r.db.QueryRow(
-		context.Background(),
-		`INSERT INTO facts (text) VALUES ($1) RETURNING id, text`,
+		ctx,
+		query,
 		req.Text,
 	).Scan(&fact.ID, &fact.Text)
 
@@ -76,11 +82,13 @@ func (r *PostgresFactsRepository) Create(req dtos.CreateFactRequest) (*model.Fac
 	return &fact, nil
 }
 
-func (r *PostgresFactsRepository) Update(req dtos.UpdateFactRequest) (*model.Fact, error) {
+func (r *FactRepository) Update(ctx context.Context, req dtos.UpdateFactRequest) (*model.Fact, error) {
+	query := `UPDATE facts SET text=$1 WHERE id=$2 RETURNING id, text`
+	
 	var fact model.Fact
 	err := r.db.QueryRow(
-		context.Background(),
-		`UPDATE facts SET text=$1 WHERE id=$2 RETURNING id, text`,
+		ctx,
+		query,
 		req.Text, req.ID,
 	).Scan(&fact.ID, &fact.Text)
 
@@ -93,8 +101,9 @@ func (r *PostgresFactsRepository) Update(req dtos.UpdateFactRequest) (*model.Fac
 	return &fact, nil
 }
 
-func (r *PostgresFactsRepository) Delete(id uint64) error {
-	cmdTag, err := r.db.Exec(context.Background(), `DELETE FROM facts WHERE id=$1`, id)
+func (r *FactRepository) Delete(ctx context.Context, id uint64) error {
+	query := `DELETE FROM facts WHERE id=$1`
+	cmdTag, err := r.db.Exec(ctx, query, id)
 	if err != nil {
 		return err
 	}

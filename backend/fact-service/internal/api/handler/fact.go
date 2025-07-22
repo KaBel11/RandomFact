@@ -1,4 +1,4 @@
-package api
+package handler
 
 import (
 	"net/http"
@@ -9,16 +9,16 @@ import (
 	"github.com/KaBel11/RandomFact/shared/utils"
 )
 
-type FactsHandler struct {
-	svc *service.FactsService
+type FactHandler struct {
+	svc *service.FactService
 }
 
-func NewFactsHandler(svc *service.FactsService) *FactsHandler {
-	return &FactsHandler{svc: svc}
+func NewFactHandler(svc *service.FactService) *FactHandler {
+	return &FactHandler{svc: svc}
 }
 
-func (h *FactsHandler) List(w http.ResponseWriter, r *http.Request) {
-	facts, err := h.svc.GetAllFacts()
+func (h *FactHandler) List(w http.ResponseWriter, r *http.Request) {
+	facts, err := h.svc.GetAllFacts(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -26,14 +26,14 @@ func (h *FactsHandler) List(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, facts)
 }
 
-func (h *FactsHandler) GetById(w http.ResponseWriter, r *http.Request) {
+func (h *FactHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 	id, err := strconv.ParseUint(idParam, 10, 64)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	fact, err := h.svc.GetByID(id)
+	fact, err := h.svc.GetByID(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -41,8 +41,8 @@ func (h *FactsHandler) GetById(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, fact)
 }
 
-func (h *FactsHandler) GetRandomFact(w http.ResponseWriter, r *http.Request) {
-	fact, err := h.svc.GetRandomFact()
+func (h *FactHandler) GetRandomFact(w http.ResponseWriter, r *http.Request) {
+	fact, err := h.svc.GetRandomFact(r.Context())
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -50,14 +50,14 @@ func (h *FactsHandler) GetRandomFact(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, fact)
 }
 
-func (h *FactsHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *FactHandler) Create(w http.ResponseWriter, r *http.Request) {
 	var req dtos.CreateFactRequest
 	if err := utils.DecodeJSON(r, &req); err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	fact, err := h.svc.CreateFact(req)
+	fact, err := h.svc.CreateFact(r.Context(), req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -66,7 +66,7 @@ func (h *FactsHandler) Create(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusCreated, fact)
 }
 
-func (h *FactsHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *FactHandler) Update(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 	id, err := strconv.ParseUint(idParam, 10, 64) 
 	if err != nil {
@@ -84,7 +84,7 @@ func (h *FactsHandler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fact, err := h.svc.UpdateFact(req)
+	fact, err := h.svc.UpdateFact(r.Context(), req)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
@@ -93,14 +93,14 @@ func (h *FactsHandler) Update(w http.ResponseWriter, r *http.Request) {
 	utils.RespondJSON(w, http.StatusOK, fact)
 }
 
-func (h *FactsHandler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *FactHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	idParam := r.PathValue("id")
 	id, err := strconv.ParseUint(idParam, 10, 64) 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	err = h.svc.DeleteFact(id)
+	err = h.svc.DeleteFact(r.Context(), id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
